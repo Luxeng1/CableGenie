@@ -15,11 +15,17 @@ cable_data = {
     "50": {"resistance": 0.398, "rating": 165},
     "70": {"resistance": 0.283, "rating": 210},
     "95": {"resistance": 0.205, "rating": 265},
+    "120": {"resistance": 0.162, "rating": 310},
+    "150": {"resistance": 0.129, "rating": 355},
+    "185": {"resistance": 0.106, "rating": 405},
+    "240": {"resistance": 0.0801, "rating": 470},
+    "300": {"resistance": 0.0641, "rating": 520},
+    "400": {"resistance": 0.0486, "rating": 620}
 }
 
 # ---- Streamlit UI ----
 st.title("CableGenie: Street Lighting Cable Sizing Tool")
-st.write("🔌 Smart cable sizing for street lighting – powered by CableGenie.")
+st.write("\U0001F50C Smart cable sizing for street lighting – powered by CableGenie.")
 
 voltage = st.selectbox("System Voltage (V)", [230, 400])
 load_per_pole = st.number_input("Load per Pole (Watts)", min_value=200, max_value=270)
@@ -27,6 +33,7 @@ number_of_poles = st.number_input("Number of Poles", min_value=1, step=1)
 pole_spacing = st.number_input("Pole Spacing (meters)", min_value=1.0)
 power_factor = st.slider("Power Factor", 0.1, 1.0, 0.9)
 voltage_drop_limit_percent = st.slider("Allowable Voltage Drop (%)", 1.0, 10.0, 5.0)
+cable_cores = st.selectbox("Cable Core (2C, 3C, 4C)", [2, 3, 4])
 
 if st.button("Calculate"):
     total_load_watt = load_per_pole * number_of_poles
@@ -38,7 +45,8 @@ if st.button("Calculate"):
 
     for size, props in cable_data.items():
         resistance_ohm_per_km = props['resistance']
-        voltage_drop = (2 * resistance_ohm_per_km * cable_length / 1000) * current
+        adjusted_resistance = resistance_ohm_per_km * (cable_cores - 1)
+        voltage_drop = (adjusted_resistance * cable_length / 1000) * current
         voltage_drop_percent = (voltage_drop / voltage) * 100
         is_suitable = voltage_drop_percent <= voltage_drop_limit_percent and current <= props['rating']
 
@@ -54,13 +62,14 @@ if st.button("Calculate"):
         if is_suitable and not selected_size:
             selected_size = size
 
-    st.subheader("🧠 Sizing Summary")
+    st.subheader("\U0001F9E0 Sizing Summary")
     st.write(f"**Total Load:** {total_load_watt:.2f} W")
     st.write(f"**Estimated Current:** {current:.2f} A")
     st.write(f"**Cable Length:** {cable_length:.2f} m")
+    st.write(f"**Cable Core Selection:** {cable_cores}C")
 
     if selected_size:
-        st.success(f"✨ CableGenie Suggests: {selected_size} mm²")
+        st.success(f"\u2728 CableGenie Suggests: {selected_size} mm²")
     else:
         st.error("No suitable cable size found within voltage drop and current limits.")
 
